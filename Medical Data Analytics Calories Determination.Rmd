@@ -1,0 +1,347 @@
+---
+title: "MEDICAL DATA ANALYTICS CALORIES DETERMINATION"
+author: "Enock Bereka"
+date: "2025-02-15"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the necessary libraries
+```{r warning=FALSE, message=FALSE}
+library(vip)
+library(performance)
+library(ggeffects)
+library(gtsummary)
+library(equatiomatic)
+library(tidyverse)
+library(ggcorrplot)
+library(sjPlot)
+library(emmeans)
+library(effectsize)
+library(car)
+library(vip)
+```
+
+## Load and inspect the dataset
+```{r warning=FALSE, message=FALSE}
+data <- read_csv("C:/Users/PC/OneDrive/Desktop/Data Science/Datasets/Datasets/calories.csv")
+glimpse(data)
+anyNA(data)
+sum(duplicated(data))
+```
+
+## Data preparation
+```{r warning=FALSE, message=FALSE}
+data$Gender <- as.factor(data$Gender)
+```
+
+## Univariate analysis
+## Summary statistics
+```{r warning=FALSE, message=FALSE}
+data %>% select(-1, -2) %>% summary()
+```
+
+## Frequency distributions
+```{r warning=FALSE, message=FALSE}
+theme_set(theme_classic()+theme(title = element_text
+                                (face = "bold", 
+                                  colour = "green")))
+```
+
+## Gender
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Gender))+
+  geom_bar(fill = "purple", color = "red")+
+  labs(title = "Distribution of subjects based on Gender",
+       y = "Frequency", caption = "enoch(2025)")
+```
+
+## Age
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Age))+
+  geom_histogram(fill = "purple", color = "red", bins = 15)+
+  labs(title = "Distribution of subjects based on Age",
+       y = "Frequency", caption = "enoch(2025)")
+```
+
+## Height
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Height))+
+  geom_histogram(fill = "purple", color = "red", bins = 15)+
+  labs(title = "Distribution of subjects based on Height",
+       y = "Frequency", caption = "enoch(2025)")
+```
+
+## Weight
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Weight))+
+  geom_histogram(fill = "purple", color = "red", bins = 15)+
+  labs(title = "Distribution of subjects based on Weight",
+       y = "Frequency", caption = "enoch(2025)")
+```
+
+## Duration
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Duration))+
+  geom_histogram(fill = "purple", color = "red", bins = 15)+
+  labs(title = "Distribution of subjects based on Duration",
+       y = "Frequency", caption = "enoch(2025)")
+```
+
+## Heart Rate
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Heart_Rate))+
+  geom_histogram(fill = "purple", color = "red", bins = 15)+
+  labs(title = "Distribution of subjects based on Heart Rate",
+       y = "Frequency", caption = "enoch(2025)",
+       x = "Heart Rate")
+```
+
+## Body Temperature
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Body_Temp))+
+  geom_histogram(fill = "purple", color = "red", bins = 15)+
+  labs(title = "Distribution of subjects based on Body Temperature",
+       y = "Frequency", caption = "enoch(2025)",
+       x = "Body Temperature")
+```
+
+## Calories
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(Calories))+
+  geom_histogram(fill = "purple", color = "red", bins = 15)+
+  labs(title = "Distribution of subjects based on Calories",
+       y = "Frequency", caption = "enoch(2025)")
+```
+
+## Bivariate Analysis
+## Correlation Analysis
+```{r warning=FALSE, message=FALSE}
+cr <- data %>% select(-1, -2) %>% cor()
+ggcorrplot(cr,title = "Correlation Heatmap",lab_col = "black",
+           lab = TRUE, legend.title = "Pearson Correlation",
+           lab_size = 3, ggtheme = theme_classic(),
+           outline.color = "black",
+           colors = c("orange", "green", "blue"))
+```
+
+## There is a strong positive correlation between Body temperature, heart rate and duration with calories.
+## There is a strong correlation between height and weight indicating multicollinearity.
+
+## How Calories relate with Gender
+```{r warning=FALSE, message=FALSE}
+t.test(Calories~Gender, data = data)
+``` 
+
+## There is a statistically significant difference in mean of calories between male and female indicated by smaller p-value lower than 0.05. This shows that gender has some influence on calories determination.
+
+## Visualize the relationship
+```{r warning=FALSE, message=FALSE}
+ggplot(data, aes(x = Gender, y = Calories))+
+  geom_boxplot(fill = "purple", color = "red")+
+  labs(title = "Calories vs Gender", caption = "enoch(2025)")
+```
+
+## Multivariate analysis
+## Linear Regression
+```{r warning=FALSE, message=FALSE}
+data$User_ID <- NULL
+model <- lm(Calories~., data = data)
+```
+
+## Check Model assumptions
+## Check for outliers
+```{r warning=FALSE, message=FALSE}
+check_outliers(model)
+check_outliers(model) %>% plot()
+```
+
+## Check for autocorrelation
+```{r warning=FALSE, message=FALSE}
+check_autocorrelation(model)
+```
+
+## Check residuals
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "diag")
+```
+
+## Visualizing Model Diagnostics
+## Residual Plot
+```{r warning=FALSE, message=FALSE}
+plot(model, which = 1, col = "violet")  # Residuals vs. Fitted plot
+```
+
+## Normal Q-Q Plot
+```{r warning=FALSE, message=FALSE}
+plot(model, which = 2, col = "red", main = "Normal Q-Q Plot")  # Normal Q-Q plot
+```
+
+## Cook’s Distance Plot (Influence)
+```{r warning=FALSE, message=FALSE}
+plot(model, which = 4, col = "violet")
+```
+
+## Determine model predicted probabilities
+```{r warning=FALSE, message=FALSE}
+ggeffect(model)
+```
+
+## Marginal Effects of Gender on Calories
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "pred", terms = "Gender")
+```
+
+## Females have higher volumes of calories than females
+
+## Marginal Effects of Age on Calories
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "pred", terms = "Age") 
+```
+
+## An increase in Age leads to an increase in calories.
+
+
+## Marginal Effects of Height on Calories
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "pred", terms = "Height")
+```
+
+## An increase in height leads to a decrease in calories.
+
+## Marginal Effects of Weight on Calories
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "pred", terms = "Weight")
+```
+
+## An increase in weight leads to an increase in calories.
+
+## Marginal Effects of Duration on Calories
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "pred", terms = "Duration")
+```
+
+## An increase in duration leads to an increase in calories.
+
+## Marginal Effects of Heart Rate on Calories
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "pred", terms = "Heart_Rate")
+```
+
+## An increase in heart rate leads to an increase in calories.
+
+## Marginal Effects of Body Temperature on Calories
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "pred", terms = "Body_Temp")
+```
+
+## An increase in body temperature leads to decrease i calories.
+
+## Model interactions
+## Fit a model with an interaction term(Gender)
+```{r warning=FALSE, message=FALSE}
+model_interaction <- lm(Calories ~ Age * Gender, data = data)
+```
+
+## Visualize interaction effect
+```{r warning=FALSE, message=FALSE}
+plot_model(model_interaction, type = "int")
+```
+
+## Fit a model with an interaction term(Gender)
+```{r warning=FALSE, message=FALSE}
+model_interaction <- lm(Calories ~ Height * Gender, data = data)
+```
+
+## Visualize interaction effect
+```{r warning=FALSE, message=FALSE}
+plot_model(model_interaction, type = "int")
+```
+
+## Fit a model with an interaction term(Gender)
+```{r warning=FALSE, message=FALSE}
+model_interaction <- lm(Calories ~ Weight * Gender, data = data)
+```
+
+## Visualize interaction effect
+```{r warning=FALSE, message=FALSE}
+plot_model(model_interaction, type = "int")
+```
+
+## Fit a model with an interaction term(Gender)
+```{r warning=FALSE, message=FALSE}
+model_interaction <- lm(Calories ~ Duration * Gender, data = data)
+```
+
+## Visualize interaction effect
+```{r warning=FALSE, message=FALSE}
+plot_model(model_interaction, type = "int")
+```
+
+## Fit a model with an interaction term(Gender)
+```{r warning=FALSE, message=FALSE}
+model_interaction <- lm(Calories ~ Body_Temp * Gender, data = data)
+```
+
+## Visualize interaction effect
+```{r warning=FALSE, message=FALSE}
+plot_model(model_interaction, type = "int")
+```
+
+## Fit a model with an interaction term(Gender)
+```{r warning=FALSE, message=FALSE}
+model_interaction <- lm(Calories ~ Heart_Rate * Gender, data = data)
+```
+
+## Visualize interaction effect
+```{r warning=FALSE, message=FALSE}
+plot_model(model_interaction, type = "int")
+```
+
+## Obtaining Estimated Marginal Means
+```{r warning=FALSE, message=FALSE}
+emmeans(model, ~ Gender)
+```
+
+## Pairwise Comparisons of Estimated Means
+```{r warning=FALSE, message=FALSE}
+pairs(emmeans(model, ~ Gender))
+```
+
+## Visualizing Estimated Marginal Means
+## Basic Visualization
+```{r warning=FALSE, message=FALSE}
+emmip(model, Gender ~ Age)
+```
+
+## Compare relative importance of predictors
+```{r warning=FALSE, message=FALSE}
+plot_model(model, type = "std")
+```
+
+## Generate a regression summary table
+```{r warning=FALSE, message=FALSE}
+tbl_regression(model)
+```
+
+## Produce model equation
+```{r warning=FALSE, message=FALSE}
+extract_eq(model)
+```
+
+## Checking variable importance
+```{r warning=FALSE, message=FALSE}
+car::Anova(model)
+vip(model)
+```
+
+## How well our model fits the data
+```{r warning=FALSE, message=FALSE}
+performance(model)
+```
+
+## Our model explains 96.7% of variability in the outcome variable making it a better fit.
+## Our model has RMSE of 11.311 which is less than the standard deviation of the outcome variable making it an excellent tool in making predictions.
