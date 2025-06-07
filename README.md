@@ -147,7 +147,7 @@ Thanks to the R community and open-source contributors whose tools made this ana
 
 📍 Kakamega, Kenya  
 
-🌐 [LinkedIn](https://www.linkedin.com/in/enock-bereka) • 📧 enock@example.com
+🌐 [LinkedIn](https://www.linkedin.com/in/enock-bereka) • 📧 enochosenwafulah@gmail.com 
 
 > _"Transforming health through the power of data."_
 
